@@ -369,7 +369,7 @@ class OpenProjectClient:
         if project_id:
             filters.append({"project": {"operator": "=", "values": [project_id]}})
         if user_id:
-            filters.append({"user": {"operator": "=", "values": [str(user_id)]}})
+            filters.append({"principal": {"operator": "=", "values": [str(user_id)]}})
 
         if filters:
             filter_string = quote(json.dumps(filters))

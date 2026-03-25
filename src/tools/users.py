@@ -200,10 +200,7 @@ async def list_user_projects(user_id: int) -> str:
     try:
         client = get_client()
 
-        import json
-        filters = json.dumps([{"principal": {"operator": "=", "values": [str(user_id)]}}])
-
-        result = await client.get_memberships(filters)
+        result = await client.get_memberships(user_id=user_id)
         memberships = result.get("_embedded", {}).get("elements", [])
 
         if not memberships:
@@ -212,13 +209,25 @@ async def list_user_projects(user_id: int) -> str:
         text = f"✅ **Projects for User #{user_id} ({len(memberships)}):**\n\n"
         for member in memberships:
             embedded = member.get("_embedded", {})
+            links = member.get("_links", {})
 
+            # Project name: try _embedded first, fall back to _links title
             if "project" in embedded:
                 project_name = embedded["project"].get("name", "Unknown")
-                text += f"- **{project_name}**\n"
+            elif "project" in links:
+                project_name = links["project"].get("title", "Unknown")
+            else:
+                project_name = "Unknown"
+            text += f"- **{project_name}**\n"
 
+            # Roles: try _embedded first, fall back to _links
             if "roles" in embedded:
                 roles = [r.get("name", "Unknown") for r in embedded["roles"]]
+            elif "roles" in links:
+                roles = [r.get("title", "Unknown") for r in links["roles"]]
+            else:
+                roles = []
+            if roles:
                 text += f"  Roles: {', '.join(roles)}\n"
 
             text += "\n"
