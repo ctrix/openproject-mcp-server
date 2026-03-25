@@ -15,8 +15,8 @@ if __name__ == "__main__":
     api_keys = load_api_keys_from_env()
 
     # Get host and port from environment
-    host = os.getenv("MCP_HTTP_HOST", "0.0.0.0")
-    port = int(os.getenv("MCP_HTTP_PORT", "8000"))
+    host = os.getenv("MCP_HOST", "127.0.0.1")
+    port = int(os.getenv("MCP_PORT", "8000"))
 
     print(f"🚀 Starting OpenProject MCP Server (HTTP)")
     print(f"   Host: {host}")
