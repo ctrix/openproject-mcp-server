@@ -88,8 +88,11 @@ OPENPROJECT_API_KEY=your-api-key-here
 | `OPENPROJECT_URL` | Yes | Your OpenProject instance URL | `https://mycompany.openproject.com` |
 | `OPENPROJECT_API_KEY` | Yes | API key from your OpenProject user profile | `8169846b42461e6e...` |
 | `OPENPROJECT_PROXY` | No | HTTP proxy URL if needed | `http://proxy.company.com:8080` |
+| `OPENPROJECT_VERIFY_SSL` | No | Set to `false` to disable SSL certificate verification. **Only use for self-signed certs on trusted networks.** | `true` |
 | `LOG_LEVEL` | No | Logging level (DEBUG, INFO, WARNING, ERROR) | `INFO` |
 | `TEST_CONNECTION_ON_STARTUP` | No | Test API connection when server starts | `true` |
+| `MCP_HOST` | No | IP address the server binds to. Defaults to `127.0.0.1` (localhost only). Set to `0.0.0.0` when running in Docker or to accept remote connections. | `0.0.0.0` |
+| `MCP_PORT` | No | Port the MCP server listens on. | `8000` |
 
 ### Getting an API Key
 

@@ -77,7 +77,8 @@ async def list_work_packages(
     # NEW: Additional filters
     author_id: Optional[int] = None,
     parent_id: Optional[int] = None,
-    no_parent_only: bool = False
+    no_parent_only: bool = False,
+    assigned_to_me: bool = False
 ) -> str:
     """List work packages (tasks) with advanced filtering - CRITICAL tool for flexible task search.
     
@@ -116,6 +117,7 @@ async def list_work_packages(
         author_id: Filter by task creator/author
         parent_id: Filter by parent work package ID (child tasks)
         no_parent_only: If True, only show top-level tasks (no parent)
+        assigned_to_me: If True, only show tasks assigned to the current user (overrides assignee_id)
     
     Returns:
         Formatted list of work packages matching all specified filters
@@ -171,6 +173,9 @@ async def list_work_packages(
         if unassigned_only:
             # Unassigned takes priority over assignee_id
             filters_list.append({"assignee": {"operator": "!*", "values": []}})
+        elif assigned_to_me:
+            # OpenProject supports the special "me" token for the authenticated user
+            filters_list.append({"assignee": {"operator": "=", "values": ["me"]}})
         elif assignee_id:
             filters_list.append({"assignee": {"operator": "=", "values": [str(assignee_id)]}})
         
@@ -558,6 +563,24 @@ async def update_work_package(input: UpdateWorkPackageInput) -> str:
 
 
 @mcp.tool
+async def get_work_package(work_package_id: int) -> str:
+    """Get a single work package by ID, including its full description.
+
+    Args:
+        work_package_id: ID of the work package to retrieve
+
+    Returns:
+        Full work package details including description
+    """
+    try:
+        client = get_client()
+        wp = await client.get_work_package(work_package_id)
+        return format_work_package_detail(wp)
+    except Exception as e:
+        return format_error(f"Failed to get work package: {str(e)}")
+
+
+@mcp.tool
 async def delete_work_package(work_package_id: int) -> str:
     """Delete a work package (task).
 
@@ -579,6 +602,56 @@ async def delete_work_package(work_package_id: int) -> str:
 
     except Exception as e:
         return format_error(f"Failed to delete work package: {str(e)}")
+
+
+@mcp.tool
+async def list_custom_fields(project_id: int, type_id: int) -> str:
+    """List available custom fields for a work package type in a project.
+
+    Queries the work package form schema to discover all custom fields,
+    their IDs (e.g. customField6), names, and types.
+
+    Args:
+        project_id: Project ID to query custom fields for
+        type_id: Work package type ID (use list_types to find IDs)
+
+    Returns:
+        List of custom fields with their API key names and types
+    """
+    try:
+        client = get_client()
+
+        payload = {
+            "_links": {
+                "project": {"href": f"/api/v3/projects/{project_id}"},
+                "type": {"href": f"/api/v3/types/{type_id}"},
+            }
+        }
+        form = await client._request("POST", "/work_packages/form", payload)
+        schema = form.get("schema", form.get("_embedded", {}).get("schema", {}))
+
+        if not schema:
+            return format_error("No schema returned from form endpoint")
+
+        custom_fields = {
+            k: v for k, v in schema.items()
+            if k.startswith("customField")
+        }
+
+        if not custom_fields:
+            return "No custom fields found for this project/type combination."
+
+        text = f"✅ Found {len(custom_fields)} custom field(s):\n\n"
+        for key, field in sorted(custom_fields.items()):
+            name = field.get("name", "Unknown")
+            field_type = field.get("type", "Unknown")
+            required = field.get("required", False)
+            text += f"- **{key}**: {name} (type: `{field_type}`{', required' if required else ''})\n"
+
+        return text
+
+    except Exception as e:
+        return format_error(f"Failed to fetch custom fields: {str(e)}")
 
 
 @mcp.tool
@@ -793,7 +866,7 @@ async def add_work_package_comment(
         To add a progress update:
         {
             "work_package_id": 123,
-            "comment": "## Progress Update\\n\\n- Completed database migration\\n- Started API integration",
+            "comment": "## Progress Update\n\n- Completed database migration\n- Started API integration",
             "internal": false
         }
     """
