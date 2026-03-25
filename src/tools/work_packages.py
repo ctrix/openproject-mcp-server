@@ -171,6 +171,9 @@ async def list_work_packages(
         if unassigned_only:
             # Unassigned takes priority over assignee_id
             filters_list.append({"assignee": {"operator": "!*", "values": []}})
+        elif assigned_to_me:
+            # OpenProject supports the special "me" token for the authenticated user
+            filters_list.append({"assignee": {"operator": "=", "values": ["me"]}})
         elif assignee_id:
             filters_list.append({"assignee": {"operator": "=", "values": [str(assignee_id)]}})
         
