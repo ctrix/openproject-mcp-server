@@ -1,0 +1,21 @@
+services:
+  openproject-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: openproject-mcp-server:local
+    container_name: openproject-mcp
+    restart: unless-stopped
+    command: ["python", "openproject-mcp-sse.py"]
+    environment:
+      OPENPROJECT_URL: "${OPENPROJECT_URL}"
+      OPENPROJECT_API_KEY: "${OPENPROJECT_API_KEY}"
+      OPENPROJECT_PROXY: "${OPENPROJECT_PROXY:-}"
+      OPENPROJECT_VERIFY_SSL: "${OPENPROJECT_VERIFY_SSL:-true}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      TEST_CONNECTION_ON_STARTUP: "${TEST_CONNECTION_ON_STARTUP:-false}"
+      PYTHONPATH: "/app"
+      MCP_HOST: "${MCP_HOST:-0.0.0.0}"
+      MCP_PORT: "${MCP_PORT:-8000}"
+    ports:
+      - "${MCP_PORT:-8000}:${MCP_PORT:-8000}"
