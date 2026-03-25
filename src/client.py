@@ -37,6 +37,7 @@ class OpenProjectClient:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.proxy = proxy
+        self.verify_ssl = os.getenv("OPENPROJECT_VERIFY_SSL", "true").lower() != "false"
 
         # Setup headers with Basic Auth
         self.headers = {
@@ -49,6 +50,12 @@ class OpenProjectClient:
         logger.info(f"OpenProject Client initialized for: {self.base_url}")
         if self.proxy:
             logger.info(f"Using proxy: {self.proxy}")
+        if not self.verify_ssl:
+            logger.warning(
+                "⚠️  SSL certificate verification is DISABLED "
+                "(OPENPROJECT_VERIFY_SSL=false). "
+                "Do not use this setting on untrusted networks."
+            )
 
     def _encode_api_key(self) -> str:
         """Encode API key for Basic Auth"""
@@ -79,7 +86,7 @@ class OpenProjectClient:
             logger.debug(f"Request body: {json.dumps(data, indent=2)}")
 
         # Configure SSL and timeout
-        ssl_context = ssl.create_default_context()
+        ssl_context = ssl.create_default_context() if self.verify_ssl else False
         connector = aiohttp.TCPConnector(ssl=ssl_context)
         timeout = aiohttp.ClientTimeout(total=30)
 
