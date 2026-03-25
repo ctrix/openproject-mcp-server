@@ -10,4 +10,4 @@ from src.server import mcp
 
 if __name__ == "__main__":
     # Run with SSE transport (for FastMCP Cloud deployment)
-    mcp.run(transport="sse")
+    mcp.run(transport="http", host="0.0.0.0", port=8000)

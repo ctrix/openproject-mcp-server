@@ -793,7 +793,7 @@ async def add_work_package_comment(
         To add a progress update:
         {
             "work_package_id": 123,
-            "comment": "## Progress Update\\n\\n- Completed database migration\\n- Started API integration",
+            "comment": "## Progress Update\n\n- Completed database migration\n- Started API integration",
             "internal": false
         }
     """

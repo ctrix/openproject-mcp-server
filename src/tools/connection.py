@@ -39,6 +39,7 @@ async def check_permissions() -> str:
             return "❌ Failed to retrieve permissions information"
 
         text = "✅ User Permissions Retrieved\n\n"
+        text += f"**ID**: {result.get('id', 'Unknown')}\n"
         text += f"**Name**: {result.get('name', 'Unknown')}\n"
         text += f"**Email**: {result.get('email', 'N/A')}\n"
         text += f"**Login**: {result.get('login', 'N/A')}\n"

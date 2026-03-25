@@ -79,7 +79,8 @@ class OpenProjectClient:
             logger.debug(f"Request body: {json.dumps(data, indent=2)}")
 
         # Configure SSL and timeout
-        ssl_context = ssl.create_default_context()
+        verify_ssl = os.getenv("OPENPROJECT_VERIFY_SSL", "true").lower() != "false"
+        ssl_context = ssl.create_default_context() if verify_ssl else False
         connector = aiohttp.TCPConnector(ssl=ssl_context)
         timeout = aiohttp.ClientTimeout(total=30)
 
