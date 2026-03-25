@@ -582,6 +582,56 @@ async def delete_work_package(work_package_id: int) -> str:
 
 
 @mcp.tool
+async def list_custom_fields(project_id: int, type_id: int) -> str:
+    """List available custom fields for a work package type in a project.
+
+    Queries the work package form schema to discover all custom fields,
+    their IDs (e.g. customField6), names, and types.
+
+    Args:
+        project_id: Project ID to query custom fields for
+        type_id: Work package type ID (use list_types to find IDs)
+
+    Returns:
+        List of custom fields with their API key names and types
+    """
+    try:
+        client = get_client()
+
+        payload = {
+            "_links": {
+                "project": {"href": f"/api/v3/projects/{project_id}"},
+                "type": {"href": f"/api/v3/types/{type_id}"},
+            }
+        }
+        form = await client._request("POST", "/work_packages/form", payload)
+        schema = form.get("schema", form.get("_embedded", {}).get("schema", {}))
+
+        if not schema:
+            return format_error("No schema returned from form endpoint")
+
+        custom_fields = {
+            k: v for k, v in schema.items()
+            if k.startswith("customField")
+        }
+
+        if not custom_fields:
+            return "No custom fields found for this project/type combination."
+
+        text = f"✅ Found {len(custom_fields)} custom field(s):\n\n"
+        for key, field in sorted(custom_fields.items()):
+            name = field.get("name", "Unknown")
+            field_type = field.get("type", "Unknown")
+            required = field.get("required", False)
+            text += f"- **{key}**: {name} (type: `{field_type}`{', required' if required else ''})\n"
+
+        return text
+
+    except Exception as e:
+        return format_error(f"Failed to fetch custom fields: {str(e)}")
+
+
+@mcp.tool
 async def list_types(project_id: Optional[int] = None) -> str:
     """List available work package types (Bug, Task, Feature, etc.).
 
