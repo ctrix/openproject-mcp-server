@@ -558,6 +558,24 @@ async def update_work_package(input: UpdateWorkPackageInput) -> str:
 
 
 @mcp.tool
+async def get_work_package(work_package_id: int) -> str:
+    """Get a single work package by ID, including its full description.
+
+    Args:
+        work_package_id: ID of the work package to retrieve
+
+    Returns:
+        Full work package details including description
+    """
+    try:
+        client = get_client()
+        wp = await client.get_work_package(work_package_id)
+        return format_work_package_detail(wp)
+    except Exception as e:
+        return format_error(f"Failed to get work package: {str(e)}")
+
+
+@mcp.tool
 async def delete_work_package(work_package_id: int) -> str:
     """Delete a work package (task).
 

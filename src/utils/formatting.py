@@ -205,10 +205,15 @@ def format_work_package_detail(wp: Dict) -> str:
     if wp.get('description'):
         desc = wp['description']
         if isinstance(desc, dict):
-            desc_text = desc.get('raw', '')
+            desc_text = desc.get('raw', '') or desc.get('html', '')
         else:
             desc_text = str(desc)
         if desc_text:
+            import html as html_module
+            import re
+            desc_text = html_module.unescape(desc_text)
+            desc_text = re.sub(r'<br\s*/?>', '\n', desc_text, flags=re.IGNORECASE)
+            desc_text = re.sub(r'<[^>]+>', '', desc_text)
             text += f"\n**Description**:\n{desc_text}\n"
 
     # Progress
