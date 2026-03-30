@@ -1402,3 +1402,31 @@ class OpenProjectClient:
         await self._request("DELETE", f"/news/{news_id}")
         return True
 
+    async def get_groups(self) -> Dict:
+        """
+        Retrieve all groups.
+
+        Returns:
+            Dict: API response containing groups
+        """
+        result = await self._request("GET", "/groups")
+
+        if "_embedded" not in result:
+            result["_embedded"] = {"elements": []}
+        elif "elements" not in result.get("_embedded", {}):
+            result["_embedded"]["elements"] = []
+
+        return result
+
+    async def get_group(self, group_id: int) -> Dict:
+        """
+        Retrieve a specific group by ID, including its members.
+
+        Args:
+            group_id: The group ID
+
+        Returns:
+            Dict: Group data including members
+        """
+        return await self._request("GET", f"/groups/{group_id}")
+

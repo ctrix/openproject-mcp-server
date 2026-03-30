@@ -236,3 +236,61 @@ async def list_user_projects(user_id: int) -> str:
 
     except Exception as e:
         return format_error(f"Failed to list user projects: {str(e)}")
+
+
+@mcp.tool
+async def list_groups() -> str:
+    """List all groups in OpenProject.
+
+    Returns:
+        List of groups with their IDs and names
+    """
+    try:
+        client = get_client()
+        result = await client.get_groups()
+        groups = result.get("_embedded", {}).get("elements", [])
+
+        if not groups:
+            return "No groups found."
+
+        text = f"✅ **Found {len(groups)} group(s):**\n\n"
+        for group in groups:
+            text += f"- **{group.get('name', 'Unknown')}** (ID: {group.get('id', 'N/A')})\n"
+
+        return text
+
+    except Exception as e:
+        return format_error(f"Failed to list groups: {str(e)}")
+
+
+@mcp.tool
+async def get_group_members(group_id: int) -> str:
+    """List all members of a specific group.
+
+    Args:
+        group_id: The group ID
+
+    Returns:
+        List of users in the group with their IDs
+    """
+    try:
+        client = get_client()
+        group = await client.get_group(group_id)
+
+        name = group.get("name", f"Group #{group_id}")
+        members = group.get("_links", {}).get("members", [])
+
+        if not members:
+            return f"✅ **{name}** has no members."
+
+        text = f"✅ **{name}** (ID: {group_id}) — {len(members)} member(s):\n\n"
+        for member in members:
+            member_name = member.get("title", "Unknown")
+            href = member.get("href", "")
+            member_id = href.split("/")[-1] if href else "N/A"
+            text += f"- **{member_name}** (User ID: {member_id})\n"
+
+        return text
+
+    except Exception as e:
+        return format_error(f"Failed to get group members: {str(e)}")
