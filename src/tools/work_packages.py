@@ -933,10 +933,16 @@ async def list_work_package_activities(work_package_id: int) -> str:
             activity_type = activity.get("_type", "Activity")
             created_at = activity.get("createdAt", "Unknown")
 
-            # Get user from _links
+            # Get user from _links — try 'user', then 'author', then _embedded
             links = activity.get("_links", {})
-            user_link = links.get("user", {})
-            user_name = user_link.get("title", "Unknown")
+            embedded = activity.get("_embedded", {})
+            user_name = (
+                links.get("user", {}).get("title")
+                or links.get("author", {}).get("title")
+                or embedded.get("user", {}).get("name")
+                or embedded.get("author", {}).get("name")
+                or "Unknown"
+            )
 
             text += f"**Activity #{activity_id}** - {activity_type}\n"
             text += f"  By: {user_name}\n"

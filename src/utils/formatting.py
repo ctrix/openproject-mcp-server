@@ -183,13 +183,20 @@ def format_work_package_detail(wp: Dict) -> str:
         project = embedded['project']
         text += f"**Project**: {project.get('name', 'Unknown')}\n"
 
-    # Assignee is in _links
+    # Assignee and author are in _links
     assignee_link = links.get("assignee")
     if assignee_link:
         assignee_name = assignee_link.get("title", "Unknown")
         text += f"**Assignee**: {assignee_name}\n"
     else:
         text += f"**Assignee**: Unassigned\n"
+
+    author_name = (
+        links.get("author", {}).get("title")
+        or links.get("user", {}).get("title")
+    )
+    if author_name:
+        text += f"**Author**: {author_name}\n"
 
     # Dates
     if wp.get('startDate'):
