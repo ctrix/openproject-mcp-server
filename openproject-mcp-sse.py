@@ -2,16 +2,34 @@
 """
 OpenProject MCP Server - SSE Transport Entry Point
 
-This is the entry point for SSE transport (FastMCP Cloud).
-FastMCP-based implementation with automatic tool registration.
+Runs the MCP server over HTTP (streamable-http) with OAuth 2.1 authentication.
+Requires OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, and MCP_BASE_URL
+environment variables in addition to OPENPROJECT_URL.
 """
 
 import os
+import sys
+
 from src.server import mcp
+from src.oauth import create_oauth_provider
 
 if __name__ == "__main__":
+    # Validate required OAuth env vars
+    missing = [
+        v for v in ("OAUTH_CLIENT_ID", "OAUTH_CLIENT_SECRET", "MCP_BASE_URL")
+        if not os.getenv(v)
+    ]
+    if missing:
+        print(
+            f"ERROR: Missing required environment variables for HTTP/OAuth mode: {', '.join(missing)}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # Wire OAuth provider into FastMCP
+    mcp.auth = create_oauth_provider()
+
     host = os.getenv("MCP_HOST", "127.0.0.1")
     port = int(os.getenv("MCP_PORT", "8000"))
 
-    # Run with streamable-http transport
     mcp.run(transport="http", host=host, port=port)
