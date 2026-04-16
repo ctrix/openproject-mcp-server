@@ -2,7 +2,7 @@
 
 import json
 from typing import Optional
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from pydantic import BaseModel, Field
 from src.utils.formatting import format_success, format_error
 from src.utils.formatting import format_project_list
@@ -20,7 +20,7 @@ async def list_projects(active_only: bool = True, show_hierarchy: bool = False) 
         Formatted list of projects with their status and basic information
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Build filters
         filters = None
@@ -111,7 +111,7 @@ async def get_project(project_id: int) -> str:
         Detailed project information including description and settings
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         project = await client.get_project(project_id)
 
         text = f"✅ Project #{project.get('id')}\n\n"
@@ -189,7 +189,7 @@ async def create_project(input: CreateProjectInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         data = {
             "name": input.name,
@@ -243,7 +243,7 @@ async def add_subproject(input: AddSubprojectInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Validate parent project exists and is active
         try:
@@ -295,7 +295,7 @@ async def get_subprojects(parent_id: int) -> str:
         parent_id: 1
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Validate parent project exists
         try:
@@ -339,7 +339,7 @@ async def update_project(input: UpdateProjectInput) -> str:
         Success message with updated project details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         update_data = {}
 
@@ -384,7 +384,7 @@ async def delete_project(project_id: int) -> str:
         Success or error message
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         success = await client.delete_project(project_id)
 

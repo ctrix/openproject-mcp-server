@@ -1,7 +1,7 @@
 """User and role management tools."""
 
 from typing import Optional
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error
 
 
@@ -17,7 +17,7 @@ async def list_users(name: Optional[str] = None, status: Optional[str] = None) -
         List of users with their details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         filters = []
         if name:
@@ -61,7 +61,7 @@ async def get_user(user_id: int) -> str:
         Detailed user information
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         user = await client.get_user(user_id)
 
         text = f"✅ **User #{user.get('id')}**\n\n"
@@ -90,7 +90,7 @@ async def list_roles() -> str:
         List of roles with their permissions
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_roles()
         roles = result.get("_embedded", {}).get("elements", [])
@@ -119,7 +119,7 @@ async def get_role(role_id: int) -> str:
         Detailed role information including permissions
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         role = await client.get_role(role_id)
 
         text = f"✅ **Role #{role.get('id')}**\n\n"
@@ -152,7 +152,7 @@ async def list_project_members(project_id: int) -> str:
         List of project members with their roles
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_memberships(project_id=project_id)
         memberships = result.get("_embedded", {}).get("elements", [])
@@ -198,7 +198,7 @@ async def list_user_projects(user_id: int) -> str:
         List of projects the user belongs to
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_memberships(user_id=user_id)
         memberships = result.get("_embedded", {}).get("elements", [])
@@ -246,7 +246,7 @@ async def list_groups() -> str:
         List of groups with their IDs and names
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         result = await client.get_groups()
         groups = result.get("_embedded", {}).get("elements", [])
 
@@ -274,7 +274,7 @@ async def get_group_members(group_id: int) -> str:
         List of users in the group with their IDs
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         group = await client.get_group(group_id)
 
         name = group.get("name", f"Group #{group_id}")

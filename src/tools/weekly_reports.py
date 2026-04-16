@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error
 from src.utils.report_formatter import (
     format_weekly_report_markdown,
@@ -89,7 +89,7 @@ async def _generate_weekly_report_impl(input: GenerateWeeklyReportInput) -> str:
     It is called by the @mcp.tool wrapper.
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         
         # Validate date format
         try:
@@ -331,7 +331,7 @@ async def get_report_data(input: GetReportDataInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         
         # Validate date format
         try:

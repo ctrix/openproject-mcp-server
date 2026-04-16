@@ -2,7 +2,7 @@
 
 from typing import Optional
 from pydantic import BaseModel, Field
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error
 
 
@@ -27,7 +27,7 @@ async def list_versions(project_id: int) -> str:
         List of versions with their details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_versions(project_id)
         versions = result.get("_embedded", {}).get("elements", [])
@@ -81,7 +81,7 @@ async def create_version(input: CreateVersionInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         data = {
             "name": input.name,

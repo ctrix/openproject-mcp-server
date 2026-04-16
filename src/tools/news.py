@@ -4,7 +4,7 @@ import json
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import (
     format_news_list,
     format_news_detail,
@@ -73,7 +73,7 @@ async def list_news(
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Build filters if project_id provided
         filters = None
@@ -134,7 +134,7 @@ async def create_news(input: CreateNewsInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Prepare data for API
         data = {
@@ -179,7 +179,7 @@ async def get_news(news_id: int) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Fetch news entry
         news = await client.get_news_item(news_id)
@@ -215,7 +215,7 @@ async def update_news(input: UpdateNewsInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Build update data (only include provided fields)
         data = {}
@@ -268,7 +268,7 @@ async def delete_news(news_id: int) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Delete news
         await client.delete_news(news_id)

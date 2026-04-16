@@ -2,7 +2,7 @@
 
 from typing import Optional
 from pydantic import BaseModel, Field
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error
 
 
@@ -43,7 +43,7 @@ async def list_time_entries(
         List of time entries
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         import json
         filters = []
@@ -120,7 +120,7 @@ async def create_time_entry(input: CreateTimeEntryInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         data = {
             "work_package_id": input.work_package_id,
@@ -165,7 +165,7 @@ async def update_time_entry(input: UpdateTimeEntryInput) -> str:
         Success message with updated time entry details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         update_data = {}
 
@@ -211,7 +211,7 @@ async def delete_time_entry(time_entry_id: int) -> str:
         Success or error message
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         success = await client.delete_time_entry(time_entry_id)
 
@@ -235,7 +235,7 @@ async def list_time_entry_activities() -> str:
         List of available activities or common activity IDs
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_time_entry_activities()
         activities = result.get("_embedded", {}).get("elements", [])

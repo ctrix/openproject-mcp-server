@@ -1,7 +1,7 @@
 """Work package hierarchy management tools (parent-child relationships)."""
 
 from typing import Optional
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error, format_work_package_list
 
 
@@ -17,7 +17,7 @@ async def set_work_package_parent(child_id: int, parent_id: int) -> str:
         Success message confirming the relationship
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Update child to set parent
         data = {"parent_id": parent_id}
@@ -47,7 +47,7 @@ async def remove_work_package_parent(work_package_id: int) -> str:
         Success message
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Update to remove parent (set to null)
         data = {"parent_id": None}
@@ -76,7 +76,7 @@ async def list_work_package_children(
         List of child work packages
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_work_package_children(
             parent_id=work_package_id,

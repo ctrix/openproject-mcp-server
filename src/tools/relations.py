@@ -2,7 +2,7 @@
 
 from typing import Optional
 from pydantic import BaseModel, Field
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error
 
 
@@ -52,7 +52,7 @@ async def create_work_package_relation(input: CreateRelationInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         data = {
             "from_id": input.from_id,
@@ -99,7 +99,7 @@ async def list_work_package_relations(work_package_id: int) -> str:
         List of all relations involving this work package
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Get relations for a specific work package
         import json
@@ -145,7 +145,7 @@ async def get_work_package_relation(relation_id: int) -> str:
         Detailed relation information
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         rel = await client.get_work_package_relation(relation_id)
 
         text = f"✅ **Relation #{rel.get('id')}**\n\n"
@@ -179,7 +179,7 @@ async def update_work_package_relation(input: UpdateRelationInput) -> str:
         Success message with updated relation details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         update_data = {}
 
@@ -218,7 +218,7 @@ async def delete_work_package_relation(relation_id: int) -> str:
         Success or error message
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         success = await client.delete_work_package_relation(relation_id)
 

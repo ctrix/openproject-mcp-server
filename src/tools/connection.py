@@ -1,6 +1,6 @@
 """Connection and permission checking tools."""
 
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 
 
 @mcp.tool
@@ -11,7 +11,7 @@ async def test_connection() -> str:
     This is useful for validating your API credentials and server connectivity.
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         result = await client.test_connection()
 
         text = "✅ API connection successful!\n\n"
@@ -32,7 +32,7 @@ async def check_permissions() -> str:
     Useful for debugging permission-related issues.
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         result = await client.check_permissions()
 
         if not result:

@@ -2,7 +2,7 @@
 
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import format_success, format_error
 
 
@@ -39,7 +39,7 @@ async def list_memberships(
         List of memberships with project, user, and role information
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_memberships(project_id=project_id, user_id=user_id)
         memberships = result.get("_embedded", {}).get("elements", [])
@@ -91,7 +91,7 @@ async def get_membership(membership_id: int) -> str:
         Detailed membership information
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         member = await client.get_membership(membership_id)
 
         text = f"✅ **Membership #{member.get('id')}**\n\n"
@@ -143,7 +143,7 @@ async def create_membership(input: CreateMembershipInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         data = {"project_id": input.project_id}
 
@@ -197,7 +197,7 @@ async def update_membership(input: UpdateMembershipInput) -> str:
         Success message with updated membership details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         update_data = {}
 
@@ -238,7 +238,7 @@ async def delete_membership(membership_id: int) -> str:
         Success or error message
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         success = await client.delete_membership(membership_id)
 

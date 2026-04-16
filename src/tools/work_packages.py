@@ -4,7 +4,7 @@ import json
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from src.server import mcp, get_client
+from src.server import mcp, get_client_for_request
 from src.utils.formatting import (
     format_work_package_list,
     format_work_package_detail,
@@ -147,7 +147,7 @@ async def list_work_packages(
     try:
         from datetime import date, datetime
         
-        client = get_client()
+        client = get_client_for_request()
 
         # Build filters list
         filters_list = []
@@ -326,7 +326,7 @@ async def search_work_packages(
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Validate input
         if not query or not query.strip():
@@ -416,7 +416,7 @@ async def create_work_package(input: CreateWorkPackageInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Build data dict for API
         data = {
@@ -497,7 +497,7 @@ async def update_work_package(input: UpdateWorkPackageInput) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Build data dict for API (only include provided fields)
         data = {}
@@ -573,7 +573,7 @@ async def get_work_package(work_package_id: int) -> str:
         Full work package details including description
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         wp = await client.get_work_package(work_package_id)
         return format_work_package_detail(wp)
     except Exception as e:
@@ -591,7 +591,7 @@ async def delete_work_package(work_package_id: int) -> str:
         Success or error message
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         success = await client.delete_work_package(work_package_id)
 
@@ -619,7 +619,7 @@ async def list_custom_fields(project_id: int, type_id: int) -> str:
         List of custom fields with their API key names and types
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         payload = {
             "_links": {
@@ -665,7 +665,7 @@ async def list_types(project_id: Optional[int] = None) -> str:
         List of work package types with IDs
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_types(project_id)
         types = result.get("_embedded", {}).get("elements", [])
@@ -695,7 +695,7 @@ async def list_statuses() -> str:
         List of work package statuses with IDs and properties
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_statuses()
         statuses = result.get("_embedded", {}).get("elements", [])
@@ -726,7 +726,7 @@ async def list_priorities() -> str:
         List of work package priorities with IDs
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_priorities()
         priorities = result.get("_embedded", {}).get("elements", [])
@@ -771,7 +771,7 @@ async def assign_work_package(work_package_id: int, assignee_id: int) -> str:
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Update work package with new assignee
         data = {"assignee_id": assignee_id}
@@ -818,7 +818,7 @@ async def unassign_work_package(work_package_id: int) -> str:
         Success message confirming the work package is now unassigned
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         # Update work package with null assignee (unassign)
         # Note: We need to use the API directly since setting to None might not work
@@ -871,7 +871,7 @@ async def add_work_package_comment(
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.add_work_package_comment(
             work_package_id=work_package_id,
@@ -918,7 +918,7 @@ async def list_work_package_activities(work_package_id: int) -> str:
         Formatted list of activities with details
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
 
         result = await client.get_work_package_activities(work_package_id)
         activities = result.get("_embedded", {}).get("elements", [])
@@ -1015,7 +1015,7 @@ async def list_overdue_work_packages(
     try:
         from datetime import date, datetime
         
-        client = get_client()
+        client = get_client_for_request()
         
         # Build filters list
         filters_list = [
@@ -1121,7 +1121,7 @@ async def list_work_packages_due_soon(
     try:
         from datetime import date, timedelta, datetime
         
-        client = get_client()
+        client = get_client_for_request()
         
         # Validate days parameter
         if days < 1:
@@ -1226,7 +1226,7 @@ async def list_unassigned_work_packages(
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         
         # Build filters list
         filters_list = [
@@ -1316,7 +1316,7 @@ async def list_work_packages_created_recently(
     try:
         from datetime import date, timedelta, datetime
         
-        client = get_client()
+        client = get_client_for_request()
         
         # Validate days parameter
         if days < 1:
@@ -1417,7 +1417,7 @@ async def list_high_priority_work_packages(
         with priority_ids parameter instead.
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         
         # Build filters - assume priority ID 3 is "High"
         # Users can override by using list_work_packages with specific priority_ids
@@ -1505,7 +1505,7 @@ async def list_work_packages_nearly_complete(
         }
     """
     try:
-        client = get_client()
+        client = get_client_for_request()
         
         # Validate min_percentage
         if min_percentage < 1 or min_percentage > 99:
