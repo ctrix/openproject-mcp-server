@@ -6,16 +6,17 @@ services:
     image: openproject-mcp-server:local
     container_name: openproject-mcp
     restart: unless-stopped
-    command: ["python", "openproject-mcp-sse.py"]
+    command: ["python", "openproject-mcp-http.py"]
     environment:
       OPENPROJECT_URL: "${OPENPROJECT_URL}"
-      OPENPROJECT_API_KEY: "${OPENPROJECT_API_KEY}"
       OPENPROJECT_PROXY: "${OPENPROJECT_PROXY:-}"
       OPENPROJECT_VERIFY_SSL: "${OPENPROJECT_VERIFY_SSL:-true}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
-      TEST_CONNECTION_ON_STARTUP: "${TEST_CONNECTION_ON_STARTUP:-false}"
       PYTHONPATH: "/app"
       MCP_HOST: "${MCP_HOST:-0.0.0.0}"
       MCP_PORT: "${MCP_PORT:-8000}"
+      OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID}"
+      OAUTH_CLIENT_SECRET: "${OAUTH_CLIENT_SECRET}"
+      MCP_BASE_URL: "${MCP_BASE_URL}"
     ports:
       - "${MCP_PORT:-8000}:${MCP_PORT:-8000}"

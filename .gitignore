@@ -143,6 +143,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.env.key
 
 # Spyder project settings
 .spyderproject
@@ -208,3 +209,7 @@ __marimo__/
 
 # Claude Code configuration
 CLAUDE.md
+
+# LOCAL STUFF
+/SESSION
+restart.sh

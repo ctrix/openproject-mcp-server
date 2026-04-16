@@ -10,10 +10,25 @@ environment variables in addition to OPENPROJECT_URL.
 import os
 import sys
 
+import httpx
+
 from src.server import mcp
 from src.oauth import create_oauth_provider
 
 if __name__ == "__main__":
+    # Disable SSL verification for all httpx clients when configured.
+    # This is needed because the OAuthProxy uses httpx internally for
+    # token exchange with the upstream provider (OpenProject), which
+    # may use a self-signed certificate.
+    if os.getenv("OPENPROJECT_VERIFY_SSL", "true").lower() == "false":
+        _original_init = httpx.AsyncClient.__init__
+
+        def _no_verify_init(self, *args, **kwargs):
+            kwargs.setdefault("verify", False)
+            _original_init(self, *args, **kwargs)
+
+        httpx.AsyncClient.__init__ = _no_verify_init
+
     # Validate required OAuth env vars
     missing = [
         v for v in ("OAUTH_CLIENT_ID", "OAUTH_CLIENT_SECRET", "MCP_BASE_URL")
