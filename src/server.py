@@ -5,9 +5,12 @@ Main server file that initializes FastMCP and registers all tools.
 """
 
 import os
+import time
 import logging
+from collections import OrderedDict
 from dotenv import load_dotenv
 from fastmcp import FastMCP
+from fastmcp.server.dependencies import get_access_token
 
 from src.client import OpenProjectClient
 
@@ -26,38 +29,94 @@ mcp = FastMCP(
     name="openproject-mcp"
 )
 
-# Initialize OpenProject client as global variable
+# Server configuration
+_base_url = os.getenv("OPENPROJECT_URL")
+_proxy = os.getenv("OPENPROJECT_PROXY")
+
+if not _base_url:
+    raise ValueError("Missing required environment variable: OPENPROJECT_URL must be set")
+
+# Initialize global client for API key mode (optional)
 _client = None
+_api_key = os.getenv("OPENPROJECT_API_KEY")
 
-try:
-    base_url = os.getenv("OPENPROJECT_URL")
-    api_key = os.getenv("OPENPROJECT_API_KEY")
-    proxy = os.getenv("OPENPROJECT_PROXY")
-
-    if not base_url or not api_key:
-        raise ValueError(
-            "Missing required environment variables: OPENPROJECT_URL and OPENPROJECT_API_KEY must be set"
+if _api_key:
+    try:
+        _client = OpenProjectClient(
+            base_url=_base_url,
+            api_key=_api_key,
+            proxy=_proxy
         )
+        logger.info(f"✅ OpenProject MCP Server initialized (API key mode)")
+        logger.info(f"   Server: {_base_url}")
+        logger.info(f"   Proxy: {_proxy if _proxy else 'None'}")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize OpenProject client: {e}")
+        raise
+else:
+    logger.info(f"✅ OpenProject MCP Server initialized (OAuth mode)")
+    logger.info(f"   Server: {_base_url}")
+    logger.info(f"   Proxy: {_proxy if _proxy else 'None'}")
 
-    _client = OpenProjectClient(
-        base_url=base_url,
-        api_key=api_key,
-        proxy=proxy
+
+# --- Per-token client cache (LRU with TTL) ---
+
+_TOKEN_CACHE_MAX = 100
+_TOKEN_CACHE_TTL = 300  # 5 minutes
+_token_cache: OrderedDict[str, tuple[OpenProjectClient, float]] = OrderedDict()
+
+
+def get_client_for_token(token: str) -> OpenProjectClient:
+    """Get or create an OpenProjectClient for a bearer token, with LRU/TTL caching."""
+    now = time.monotonic()
+
+    if token in _token_cache:
+        client, created_at = _token_cache[token]
+        if now - created_at < _TOKEN_CACHE_TTL:
+            _token_cache.move_to_end(token)
+            return client
+        else:
+            del _token_cache[token]
+
+    client = OpenProjectClient(
+        base_url=_base_url,
+        bearer_token=token,
+        proxy=_proxy,
     )
 
-    logger.info(f"✅ OpenProject MCP Server initialized")
-    logger.info(f"   Server: {base_url}")
-    logger.info(f"   Proxy: {proxy if proxy else 'None'}")
+    _token_cache[token] = (client, now)
+    _token_cache.move_to_end(token)
 
-except Exception as e:
-    logger.error(f"❌ Failed to initialize OpenProject client: {e}")
-    raise
+    # Evict oldest entries beyond max size
+    while len(_token_cache) > _TOKEN_CACHE_MAX:
+        _token_cache.popitem(last=False)
+
+    return client
 
 
-# Dependency injection helper for tools
-def get_client():
+def get_client_for_request() -> OpenProjectClient:
+    """Get an OpenProjectClient for the current request.
+
+    Checks FastMCP context for an OAuth access token first,
+    falls back to the global API key client.
+    """
+    access_token = get_access_token()
+    if access_token is not None:
+        return get_client_for_token(access_token.token)
+
+    if _client is not None:
+        return _client
+
+    raise ValueError(
+        "No authentication available. Set OPENPROJECT_API_KEY for API key mode "
+        "or configure OAuth for token-based access."
+    )
+
+
+# Backward-compatible alias
+def get_client() -> OpenProjectClient:
     """Get OpenProject client instance."""
-    return _client
+    return get_client_for_request()
 
 
 # Import ALL tool modules (decorators auto-register tools)
