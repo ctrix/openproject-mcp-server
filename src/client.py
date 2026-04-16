@@ -25,29 +25,47 @@ __version__ = "2.0.0"
 class OpenProjectClient:
     """Client for the OpenProject API v3 with optional proxy support"""
 
-    def __init__(self, base_url: str, api_key: str, proxy: Optional[str] = None):
+    def __init__(
+        self,
+        base_url: str,
+        api_key: Optional[str] = None,
+        proxy: Optional[str] = None,
+        bearer_token: Optional[str] = None,
+    ):
         """
         Initialize the OpenProject client.
 
         Args:
             base_url: The base URL of the OpenProject instance
-            api_key: API key for authentication
+            api_key: API key for authentication (mutually exclusive with bearer_token)
             proxy: Optional HTTP proxy URL
+            bearer_token: OAuth bearer token (mutually exclusive with api_key)
         """
+        if api_key and bearer_token:
+            raise ValueError("Provide either api_key or bearer_token, not both")
+        if not api_key and not bearer_token:
+            raise ValueError("Either api_key or bearer_token is required")
+
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self.bearer_token = bearer_token
         self.proxy = proxy
         self.verify_ssl = os.getenv("OPENPROJECT_VERIFY_SSL", "true").lower() != "false"
 
-        # Setup headers with Basic Auth
+        # Setup headers with appropriate auth
+        if self.bearer_token:
+            auth_header = f"Bearer {self.bearer_token}"
+        else:
+            auth_header = f"Basic {self._encode_api_key()}"
+
         self.headers = {
-            "Authorization": f"Basic {self._encode_api_key()}",
+            "Authorization": auth_header,
             "Content-Type": "application/json",
             "Accept": "application/json",
             "User-Agent": f"OpenProject-MCP/{__version__}",
         }
 
-        logger.info(f"OpenProject Client initialized for: {self.base_url}")
+        logger.info(f"OpenProject Client initialized for: {self.base_url} (auth: {'bearer' if self.bearer_token else 'api_key'})")
         if self.proxy:
             logger.info(f"Using proxy: {self.proxy}")
         if not self.verify_ssl:
@@ -138,7 +156,7 @@ class OpenProjectClient:
         base_msg = f"API Error {status}: {response_text}"
 
         error_hints = {
-            401: "Authentication failed. Please check your API key.",
+            401: "Authentication failed. Please check your credentials.",
             403: "Access denied. The user lacks required permissions.",
             404: "Resource not found. Please verify the URL and resource exists.",
             407: "Proxy authentication required.",
