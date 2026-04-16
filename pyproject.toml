@@ -28,6 +28,8 @@ dependencies = [
     "pydantic>=2.0.0",
     "uvicorn>=0.24.0",  # Required for SSE transport
     "starlette>=0.27.0",  # Required for SSE transport
+    "cryptography>=42.0.0",  # Required for OAuth token signing
+    "httpx>=0.28.0",  # Required for OAuth token verification
 ]
 
 [project.optional-dependencies]
