@@ -595,6 +595,59 @@ class OpenProjectClient:
 
         return result
 
+    async def get_activity(self, activity_id: int) -> Dict:
+        """
+        Retrieve a single activity (comment) by ID.
+
+        Args:
+            activity_id: The activity (comment) ID
+
+        Returns:
+            Dict: API response containing the activity
+        """
+        return await self._request("GET", f"/activities/{activity_id}")
+
+    async def update_activity_comment(
+        self, activity_id: int, comment: str
+    ) -> Dict:
+        """
+        Update the comment text of an activity.
+
+        OpenProject only allows the activity author to edit the comment, and
+        only within the configured edit window.
+
+        Args:
+            activity_id: The activity (comment) ID
+            comment: New comment text (markdown)
+
+        Returns:
+            Dict: API response containing the updated activity
+        """
+        payload = {
+            "comment": {
+                "format": "markdown",
+                "raw": comment,
+            }
+        }
+        return await self._request("PATCH", f"/activities/{activity_id}", payload)
+
+    async def delete_activity(self, activity_id: int) -> bool:
+        """
+        Delete an activity (comment).
+
+        Note: OpenProject's public API does not officially expose DELETE on
+        /activities/{id}; the server may respond with 405 Method Not Allowed
+        on installations that disallow it.
+
+        Args:
+            activity_id: The activity (comment) ID
+
+        Returns:
+            bool: True if the request succeeded
+        """
+        await self._request("DELETE", f"/activities/{activity_id}")
+        return True
+
     async def get_time_entries(self, filters: Optional[str] = None) -> Dict:
         """
         Retrieve time entries.

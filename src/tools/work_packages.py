@@ -905,6 +905,112 @@ async def add_work_package_comment(
 
 
 @mcp.tool
+async def get_comment(activity_id: int) -> str:
+    """Retrieve a single comment (activity) by its ID.
+
+    Args:
+        activity_id: ID of the activity/comment to retrieve
+
+    Returns:
+        Formatted comment details including author, timestamps, and text
+    """
+    try:
+        client = get_client_for_request()
+        result = await client.get_activity(activity_id)
+
+        comment_data = result.get("comment", {})
+        comment_raw = comment_data.get("raw", "")
+        comment_html = comment_data.get("html", "")
+
+        text = format_success(f"Comment #{activity_id}\n\n")
+        text += f"**Activity ID**: {result.get('id', activity_id)}\n"
+        text += f"**Type**: {result.get('_type', 'Activity')}\n"
+
+        links = result.get("_links", {})
+        user_link = links.get("user", {})
+        if user_link:
+            text += f"**Author**: {user_link.get('title', 'Unknown')}\n"
+
+        wp_link = links.get("workPackage", {})
+        if wp_link:
+            text += f"**Work Package**: {wp_link.get('title', 'Unknown')} ({wp_link.get('href', '')})\n"
+
+        if result.get("createdAt"):
+            text += f"**Created**: {result['createdAt']}\n"
+        if result.get("updatedAt") and result.get("updatedAt") != result.get("createdAt"):
+            text += f"**Updated**: {result['updatedAt']}\n"
+
+        if comment_raw:
+            text += f"\n**Comment**:\n{comment_raw}\n"
+        elif comment_html:
+            text += f"\n**Comment (HTML)**:\n{comment_html}\n"
+        else:
+            text += "\n*(no comment text — likely a non-comment activity entry)*\n"
+
+        return text
+
+    except Exception as e:
+        return format_error(f"Failed to get comment #{activity_id}: {str(e)}")
+
+
+@mcp.tool
+async def update_comment(activity_id: int, comment: str) -> str:
+    """Update the text of an existing comment (activity).
+
+    OpenProject only allows the original author to edit a comment, and only
+    within the server-configured edit window. Attempts outside those rules
+    will be rejected by the server with a permission error.
+
+    Args:
+        activity_id: ID of the activity/comment to update
+        comment: New comment text (supports markdown formatting)
+
+    Returns:
+        Success message with updated comment details
+    """
+    try:
+        client = get_client_for_request()
+        result = await client.update_activity_comment(activity_id, comment)
+
+        comment_data = result.get("comment", {})
+        comment_raw = comment_data.get("raw", comment)
+
+        text = format_success(f"Comment #{activity_id} updated successfully!\n\n")
+        text += f"**Activity ID**: {result.get('id', activity_id)}\n"
+        if result.get("updatedAt"):
+            text += f"**Updated**: {result['updatedAt']}\n"
+        text += f"**Comment**: {comment_raw[:200]}{'...' if len(comment_raw) > 200 else ''}\n"
+
+        return text
+
+    except Exception as e:
+        return format_error(f"Failed to update comment #{activity_id}: {str(e)}")
+
+
+@mcp.tool
+async def delete_comment(activity_id: int) -> str:
+    """Delete a comment (activity) by its ID.
+
+    Note: OpenProject's public REST API does not officially document a DELETE
+    method on /activities/{id}. Some installations return 405 Method Not
+    Allowed; in that case, comment deletion must be done through the web UI.
+
+    Args:
+        activity_id: ID of the activity/comment to delete
+
+    Returns:
+        Success message confirming deletion
+    """
+    try:
+        client = get_client_for_request()
+        await client.delete_activity(activity_id)
+        return format_success(f"Comment #{activity_id} deleted successfully.")
+
+    except Exception as e:
+        return format_error(f"Failed to delete comment #{activity_id}: {str(e)}")
+
+
+@mcp.tool
 async def list_work_package_activities(work_package_id: int) -> str:
     """List all activities (comments, changes) for a work package.
 
